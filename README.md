@@ -36,7 +36,7 @@ npm run dev:full
 
 ### Docker 部署
 
-#### 使用预构建镜像
+#### 使用预构建镜像（包含前端 + API）
 
 ```bash
 # 从 GitHub Container Registry 拉取
@@ -45,8 +45,8 @@ docker pull ghcr.io/your-username/music-lyrics-web:latest
 # 从 Docker Hub 拉取
 docker pull your-dockerhub-username/music-lyrics-web:latest
 
-# 运行容器
-docker run -d -p 80:80 --name music-lyrics-web ghcr.io/your-username/music-lyrics-web:latest
+# 运行容器（同时提供前端和API服务）
+docker run -d -p 80:80 -p 3001:3001 --name music-lyrics-web ghcr.io/your-username/music-lyrics-web:latest
 ```
 
 #### 本地构建
@@ -56,7 +56,7 @@ docker run -d -p 80:80 --name music-lyrics-web ghcr.io/your-username/music-lyric
 docker build -t music-lyrics-web .
 
 # 运行容器
-docker run -d -p 80:80 --name music-lyrics-web music-lyrics-web
+docker run -d -p 80:80 -p 3001:3001 --name music-lyrics-web music-lyrics-web
 ```
 
 #### Docker Compose
@@ -67,10 +67,14 @@ services:
   web:
     image: ghcr.io/your-username/music-lyrics-web:latest
     ports:
-      - "80:80"
+      - "80:80"      # 前端服务
+      - "3001:3001"  # API 服务
     restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3

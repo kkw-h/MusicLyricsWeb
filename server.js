@@ -318,6 +318,15 @@ function parseLyrics(lrc, tlyric = '', includeTranslation = true) {
 }
 
 // 启动服务器
+// 健康检查接口
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  })
+})
+
 app.listen(PORT, () => {
   console.log(`音乐API服务器运行在 http://localhost:${PORT}`)
   console.log('支持的接口:')
