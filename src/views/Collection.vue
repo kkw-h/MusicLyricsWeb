@@ -51,6 +51,18 @@
               </svg>
             </button>
             <button 
+              @click.stop="cacheCollectionLyrics(collection)"
+              class="action-btn cache-btn"
+              :class="{ 'caching': collection.caching }"
+              :disabled="collection.caching || collection.songs.length === 0"
+              :title="collection.caching ? '正在缓存歌词...' : '一键缓存歌词'"
+            >
+              <svg v-if="!collection.caching" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+              </svg>
+              <div v-else class="cache-spinner"></div>
+            </button>
+            <button 
               @click.stop="deleteCollection(collection.id)"
               class="action-btn delete-btn"
               title="删除合集"
@@ -186,6 +198,46 @@
       </div>
     </div>
 
+    <!-- 缓存进度显示 -->
+    <div v-if="cacheProgress.show" class="cache-progress-overlay">
+      <div class="cache-progress-modal">
+        <div class="progress-header">
+          <h3>正在缓存歌词</h3>
+          <div class="progress-info">
+            <span class="collection-name">{{ cacheProgress.collectionName }}</span>
+            <span class="progress-count">{{ cacheProgress.current }} / {{ cacheProgress.total }}</span>
+          </div>
+        </div>
+        
+        <div class="progress-content">
+          <div class="progress-bar-container">
+            <div class="progress-bar">
+              <div 
+                class="progress-fill" 
+                :style="{ width: (cacheProgress.current / cacheProgress.total * 100) + '%' }"
+              ></div>
+            </div>
+            <div class="progress-percentage">
+              {{ Math.round(cacheProgress.current / cacheProgress.total * 100) }}%
+            </div>
+          </div>
+          
+          <div class="current-song" v-if="cacheProgress.currentSong">
+            <div class="song-icon">🎵</div>
+            <div class="song-details">
+              <div class="song-title">{{ cacheProgress.currentSong.title }}</div>
+              <div class="song-artist">{{ cacheProgress.currentSong.artist }}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="progress-tip">
+          <p>正在为您缓存歌词，请稍候...</p>
+          <p class="tip-note">缓存完成后可离线查看歌词</p>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -203,7 +255,15 @@ export default {
       },
       showShareModal: false,
       selectedCollection: null,
-      qrCodeDataUrl: ''
+      qrCodeDataUrl: '',
+      // 缓存相关状态
+      cacheProgress: {
+        show: false,
+        current: 0,
+        total: 0,
+        currentSong: '',
+        collectionName: ''
+      }
     }
   },
   mounted() {
@@ -456,6 +516,189 @@ export default {
         month: 'short',
         day: 'numeric'
       })
+    },
+
+    // 一键缓存合集歌词
+    async cacheCollectionLyrics(collection) {
+      if (!collection.songs || collection.songs.length === 0) {
+        alert('该合集暂无歌曲')
+        return
+      }
+
+      // 设置缓存状态
+      this.$set(collection, 'caching', true)
+      this.cacheProgress.show = true
+      this.cacheProgress.current = 0
+      this.cacheProgress.total = collection.songs.length
+      this.cacheProgress.collectionName = collection.name
+
+      let cachedCount = 0
+      let skippedCount = 0
+      let failedCount = 0
+
+      try {
+        for (let i = 0; i < collection.songs.length; i++) {
+          const song = collection.songs[i]
+          this.cacheProgress.current = i + 1
+          this.cacheProgress.currentSong = `${song.title} - ${song.artist}`
+
+          // 检查歌词是否已缓存
+          const cacheKey = this.getLyricsCacheKey(song)
+          const cached = this.getCachedLyrics(cacheKey)
+          
+          if (cached) {
+            skippedCount++
+            console.log(`跳过已缓存的歌曲: ${song.title}`)
+            // 添加短暂延迟以显示进度
+            await this.delay(200)
+            continue
+          }
+
+          try {
+            // 获取歌词
+            const response = await this.fetchLyrics(song)
+            if (response && response.code === 200 && response.raw_lyric) {
+              // 缓存歌词
+              this.saveLyricsToCache(song, response.raw_lyric)
+              cachedCount++
+              console.log(`成功缓存歌词: ${song.title}`)
+            } else {
+              failedCount++
+              console.log(`获取歌词失败: ${song.title}`)
+            }
+          } catch (error) {
+            failedCount++
+            console.error(`缓存歌词失败: ${song.title}`, error)
+          }
+
+          // 添加延迟避免请求过于频繁
+          await this.delay(500)
+        }
+
+        // 显示完成提示
+        this.showCacheResult(cachedCount, skippedCount, failedCount, collection.name)
+
+      } catch (error) {
+        console.error('缓存过程出错:', error)
+        alert('缓存过程中出现错误，请稍后重试')
+      } finally {
+        // 重置状态
+        this.$set(collection, 'caching', false)
+        this.cacheProgress.show = false
+      }
+    },
+
+    // 获取歌词
+    async fetchLyrics(song) {
+      const { musicAPI } = await import('../api/music.js')
+      const params = {
+        id: song.id,
+        source: song.source || 1,
+        format: 1,
+        include_translation: true
+      }
+      return await musicAPI.getLyrics(params)
+    },
+
+    // 获取歌词缓存键
+    getLyricsCacheKey(song) {
+      return `lyrics_${song.source || 1}_${song.id}`
+    },
+
+    // 获取缓存的歌词
+    getCachedLyrics(cacheKey) {
+      try {
+        const cached = localStorage.getItem(cacheKey)
+        if (cached) {
+          const data = JSON.parse(cached)
+          // 检查缓存是否过期（7天）
+          const now = Date.now()
+          if (now - data.timestamp < 7 * 24 * 60 * 60 * 1000) {
+            return data
+          } else {
+            // 缓存过期，删除
+            localStorage.removeItem(cacheKey)
+          }
+        }
+      } catch (error) {
+        console.error('读取歌词缓存失败:', error)
+      }
+      return null
+    },
+
+    // 保存歌词到缓存
+    saveLyricsToCache(song, rawLyrics) {
+      try {
+        const cacheKey = this.getLyricsCacheKey(song)
+        const data = {
+          rawLyrics: rawLyrics,
+          songInfo: {
+            id: song.id,
+            source: song.source || 1,
+            title: song.title,
+            artist: song.artist
+          },
+          timestamp: Date.now()
+        }
+        localStorage.setItem(cacheKey, JSON.stringify(data))
+        
+        // 管理存储空间
+        this.manageLyricsStorage()
+      } catch (error) {
+        console.error('保存歌词缓存失败:', error)
+      }
+    },
+
+    // 管理歌词存储空间
+    manageLyricsStorage() {
+      try {
+        const maxCacheItems = 100 // 最多缓存100首歌词
+        const keys = Object.keys(localStorage).filter(key => key.startsWith('lyrics_'))
+        
+        if (keys.length > maxCacheItems) {
+          // 获取所有缓存项的时间戳
+          const cacheItems = keys.map(key => {
+            try {
+              const data = JSON.parse(localStorage.getItem(key))
+              return { key, timestamp: data.timestamp || 0 }
+            } catch {
+              return { key, timestamp: 0 }
+            }
+          })
+          
+          // 按时间戳排序，删除最旧的项目
+          cacheItems.sort((a, b) => a.timestamp - b.timestamp)
+          const itemsToDelete = cacheItems.slice(0, keys.length - maxCacheItems)
+          
+          itemsToDelete.forEach(item => {
+            localStorage.removeItem(item.key)
+          })
+          
+          console.log(`清理了 ${itemsToDelete.length} 个旧的歌词缓存`)
+        }
+      } catch (error) {
+        console.error('管理歌词存储失败:', error)
+      }
+    },
+
+    // 显示缓存结果
+    showCacheResult(cachedCount, skippedCount, failedCount, collectionName) {
+      let message = `合集「${collectionName}」歌词缓存完成！\n\n`
+      message += `✅ 新缓存: ${cachedCount} 首\n`
+      message += `⏭️ 已跳过: ${skippedCount} 首\n`
+      
+      if (failedCount > 0) {
+        message += `❌ 失败: ${failedCount} 首\n`
+      }
+      
+      message += `\n总计处理: ${cachedCount + skippedCount + failedCount} 首歌曲`
+      
+      alert(message)
+    },
+
+    // 延迟函数
+    delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms))
     }
   }
 }
@@ -969,6 +1212,155 @@ export default {
 
 .copy-btn:hover {
   background: #1565c0;
+}
+
+/* 缓存进度显示样式 */
+.cache-progress-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
+
+.cache-progress-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  width: 90%;
+  max-width: 480px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.progress-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.progress-header h3 {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1976d2;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.collection-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.progress-count {
+  font-size: 14px;
+  color: #666;
+  background: #f5f5f5;
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+.progress-content {
+  margin-bottom: 24px;
+}
+
+.progress-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1976d2, #42a5f5);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-percentage {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1976d2;
+  min-width: 40px;
+  text-align: right;
+}
+
+.current-song {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border-left: 4px solid #1976d2;
+}
+
+.song-icon {
+  font-size: 24px;
+  opacity: 0.8;
+}
+
+.song-details {
+  flex: 1;
+}
+
+.song-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.song-artist {
+  font-size: 14px;
+  color: #666;
+}
+
+.progress-tip {
+  text-align: center;
+  color: #666;
+}
+
+.progress-tip p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+}
+
+.tip-note {
+  font-size: 12px;
+  opacity: 0.8;
 }
 
 .copy-btn:hover {
