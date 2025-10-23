@@ -15,6 +15,8 @@
     <div v-if="loading" class="loading-state">
       <div class="loading-spinner"></div>
       <p>正在加载歌词...</p>
+      <p class="loading-source" v-if="loadingFromCache">从本地缓存加载</p>
+      <p class="loading-source" v-else>从网络获取</p>
     </div>
 
     <div v-else-if="error" class="error-state">
@@ -44,7 +46,7 @@
           <span class="total-time">{{ formatTime(totalTime) }}</span>
         </div>
         
-        <button @click="resetTime" class="reset-btn">重置</button>
+        <button @click="resetTime" class="control-btn reset-btn">重置</button>
       </div>
 
       <div class="lyrics-scroll-container" ref="lyricsContainer">
@@ -52,18 +54,12 @@
           <div 
             v-for="(line, index) in parsedLyrics" 
             :key="index"
-            class="lyric-line"
-            :class="{ 
-              active: index === currentLineIndex,
-              clickable: line.time !== null 
-            }"
-            @click="seekToTime(line.time, index)"
-            :ref="el => { if (el) lyricRefs[index] = el }"
+            class="lyrics-line"
+            :class="{ active: index === currentLineIndex }"
+            @click="seekToLine(index)"
           >
             <span class="lyric-text">{{ line.text }}</span>
-            <span v-if="line.time !== null" class="lyric-time">
-              {{ formatTime(line.time) }}
-            </span>
+            <span class="lyric-time">{{ formatTime(line.time) }}</span>
           </div>
         </div>
       </div>
@@ -88,13 +84,13 @@ export default {
       rawLyrics: '',
       parsedLyrics: [],
       loading: false,
+      loadingFromCache: false,
       error: null,
       isPlaying: false,
       currentTime: 0,
       totalTime: 0,
       currentLineIndex: -1,
-      timer: null,
-      lyricRefs: {}
+      timer: null
     }
   },
   mounted() {
@@ -108,6 +104,7 @@ export default {
       // 从路由参数获取歌曲信息
       const { id, source, title, artist } = this.$route.query
       console.log(id, source, title, artist)
+      
       if (id) {
         this.currentSong = {
           id,
@@ -117,7 +114,20 @@ export default {
         }
         this.loadLyrics()
       } else {
-        this.error = '缺少歌曲信息'
+        // 如果没有路由参数，尝试加载上次播放的歌曲
+        const lastPlayed = this.loadLastPlayedSong()
+        if (lastPlayed) {
+          console.log('加载上次播放的歌曲:', lastPlayed)
+          this.currentSong = {
+            id: lastPlayed.id,
+            source: lastPlayed.source,
+            title: lastPlayed.title,
+            artist: lastPlayed.artist
+          }
+          this.loadLyrics()
+        } else {
+          this.error = '缺少歌曲信息'
+        }
       }
     },
 
@@ -128,6 +138,21 @@ export default {
       this.error = null
 
       try {
+        // 首先尝试从本地存储加载歌词
+        this.loadingFromCache = true
+        const cachedLyrics = this.getCachedLyrics()
+        if (cachedLyrics) {
+          console.log('从本地缓存加载歌词')
+          this.rawLyrics = cachedLyrics.rawLyrics
+          this.parseLyrics()
+          this.loading = false
+          this.loadingFromCache = false
+          return
+        }
+
+        // 本地没有缓存，从API获取
+        this.loadingFromCache = false
+        console.log('从API获取歌词')
         const params = {
           id: this.currentSong.id,
           source: this.currentSong.source,
@@ -136,13 +161,27 @@ export default {
         }
 
         const response = await musicAPI.getLyrics(params)
+        
+        // 检查API响应是否成功
+        if (response.code !== 200) {
+          console.log(response)
+          throw new Error(response.message || '获取歌词失败')
+        }
+        
         this.rawLyrics = response.raw_lyric || response.data?.raw_lyric || ''
+        
+        // 只有成功获取到歌词时才进行缓存
+        if (this.rawLyrics) {
+          this.saveLyricsToCache()
+        }
+        
         this.parseLyrics()
       } catch (error) {
         console.error('获取歌词失败:', error)
         this.error = '获取歌词失败，请稍后重试'
       } finally {
         this.loading = false
+        this.loadingFromCache = false
       }
     },
 
@@ -244,30 +283,41 @@ export default {
     },
 
     scrollToCurrentLine() {
-      if (this.currentLineIndex >= 0 && this.lyricRefs[this.currentLineIndex]) {
-        const container = this.$refs.lyricsContainer
-        const element = this.lyricRefs[this.currentLineIndex]
-        
-        if (container && element) {
-          const containerHeight = container.clientHeight
-          const elementTop = element.offsetTop
-          const elementHeight = element.clientHeight
+      this.$nextTick(() => {
+        if (this.currentLineIndex >= 0) {
+          const container = this.$refs.lyricsContainer
+          const lyricsLines = container?.querySelectorAll('.lyrics-line')
+          const currentElement = lyricsLines?.[this.currentLineIndex]
           
-          const scrollTop = elementTop - containerHeight / 2 + elementHeight / 2
-          
-          container.scrollTo({
-            top: Math.max(0, scrollTop),
-            behavior: 'smooth'
-          })
+          if (container && currentElement) {
+            const containerHeight = container.clientHeight
+            const elementTop = currentElement.offsetTop
+            const elementHeight = currentElement.clientHeight
+            
+            // 计算滚动位置，让当前歌词行显示在容器中央
+            const scrollTop = elementTop - containerHeight / 2 + elementHeight / 2
+            
+            container.scrollTo({
+              top: Math.max(0, scrollTop),
+              behavior: 'smooth'
+            })
+          }
         }
-      }
+      })
     },
 
     seekToTime(time, index) {
       if (time !== null) {
-        this.currentTime = time
-        this.currentLineIndex = index
-        this.scrollToCurrentLine()
+        this.currentTime = time;
+        this.currentLineIndex = index;
+        this.scrollToCurrentLine();
+      }
+    },
+
+    seekToLine(index) {
+      const line = this.parsedLyrics[index];
+      if (line && line.time !== null) {
+        this.seekToTime(line.time, index);
       }
     },
 
@@ -279,6 +329,115 @@ export default {
 
     goBack() {
       this.$router.go(-1)
+    },
+
+    // 本地存储相关方法
+    getCachedLyrics() {
+      try {
+        const cacheKey = this.getLyricsCacheKey()
+        const cached = localStorage.getItem(cacheKey)
+        if (cached) {
+          const data = JSON.parse(cached)
+          // 检查缓存是否过期（7天）
+          const now = Date.now()
+          if (now - data.timestamp < 7 * 24 * 60 * 60 * 1000) {
+            return data
+          } else {
+            // 缓存过期，删除
+            localStorage.removeItem(cacheKey)
+          }
+        }
+      } catch (error) {
+        console.error('读取歌词缓存失败:', error)
+      }
+      return null
+    },
+
+    saveLyricsToCache() {
+      try {
+        const cacheKey = this.getLyricsCacheKey()
+        const data = {
+          rawLyrics: this.rawLyrics,
+          songInfo: { 
+            id: this.currentSong.id,
+            source: this.currentSong.source,
+            title: this.currentSong.title,
+            artist: this.currentSong.artist
+          },
+          timestamp: Date.now()
+        }
+        localStorage.setItem(cacheKey, JSON.stringify(data))
+        
+        // 保存最后播放的歌曲信息
+        this.saveLastPlayedSong()
+        
+        // 管理存储空间
+        this.manageLyricsStorage()
+      } catch (error) {
+        console.error('保存歌词缓存失败:', error)
+      }
+    },
+
+    getLyricsCacheKey() {
+      return `lyrics_${this.currentSong.source}_${this.currentSong.id}`
+    },
+
+    saveLastPlayedSong() {
+      try {
+        const lastPlayed = {
+          id: this.currentSong.id,
+          source: this.currentSong.source,
+          title: this.currentSong.title,
+          artist: this.currentSong.artist,
+          timestamp: Date.now()
+        }
+        localStorage.setItem('lastPlayedSong', JSON.stringify(lastPlayed))
+      } catch (error) {
+        console.error('保存最后播放歌曲失败:', error)
+      }
+    },
+
+    loadLastPlayedSong() {
+      try {
+        const lastPlayed = localStorage.getItem('lastPlayedSong')
+        if (lastPlayed) {
+          return JSON.parse(lastPlayed)
+        }
+      } catch (error) {
+        console.error('读取最后播放歌曲失败:', error)
+      }
+      return null
+    },
+
+    manageLyricsStorage() {
+      try {
+        const maxCacheItems = 50 // 最多缓存50首歌词
+        const keys = Object.keys(localStorage).filter(key => key.startsWith('lyrics_'))
+        
+        if (keys.length > maxCacheItems) {
+          // 获取所有缓存项的时间戳
+          const cacheItems = keys.map(key => {
+            try {
+              const data = JSON.parse(localStorage.getItem(key))
+              return { key, timestamp: data.timestamp || 0 }
+            } catch {
+              return { key, timestamp: 0 }
+            }
+          })
+          
+          // 按时间戳排序，删除最旧的项目
+          cacheItems.sort((a, b) => a.timestamp - b.timestamp)
+          const itemsToDelete = cacheItems.slice(0, keys.length - maxCacheItems)
+          
+          itemsToDelete.forEach(item => {
+            localStorage.removeItem(item.key)
+          })
+          
+          console.log(`清理了 ${itemsToDelete.length} 个旧的歌词缓存`)
+        }
+      } catch (error) {
+        console.error('管理歌词存储失败:', error)
+      }
     }
   }
 }
@@ -300,6 +459,18 @@ export default {
   gap: 15px;
   background: #f8f9fa;
   border-bottom: 1px solid #e0e0e0;
+  position: relative;
+}
+
+.lyrics-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #1976d2, transparent);
+  opacity: 0.3;
 }
 
 .back-btn {
@@ -324,12 +495,14 @@ export default {
   margin: 0 0 4px 0;
   font-size: 18px;
   font-weight: 600;
+  color: #1976d2;
 }
 
 .song-artist {
   margin: 0;
   font-size: 14px;
   opacity: 0.8;
+  color: #666;
 }
 
 .loading-state,
@@ -351,6 +524,13 @@ export default {
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 15px;
+}
+
+.loading-source {
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
+  opacity: 0.8;
 }
 
 .error-icon,
@@ -441,23 +621,42 @@ export default {
   margin: 0 auto;
 }
 
-.lyric-line {
+.lyrics-line {
   padding: 8px 0;
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 16px;
   line-height: 1.4;
   color: #666;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.lyric-line.active {
+.lyrics-line.active {
   color: #1976d2;
   font-weight: 600;
   font-size: 18px;
 }
 
-.lyric-line:hover {
+.lyrics-line:hover {
   color: #1976d2;
+}
+
+.reset-btn {
+  background: #ff5722 !important;
+  border: 1px solid #e64a19 !important;
+}
+
+.reset-btn:hover {
+  background: #e64a19 !important;
+}
+
+.lyric-time {
+  font-size: 12px;
+  color: #999;
+  margin-left: 10px;
+  flex-shrink: 0;
 }
 
 .lyric-text {
