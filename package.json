@@ -16,6 +16,7 @@
     "crypto-js": "^4.2.0",
     "music-api-sdk": "^1.0.0",
     "NeteaseCloudMusicApi": "^4.28.0",
+    "qrcode": "^1.5.4",
     "vue": "^3.4.0",
     "vue-router": "^4.2.0"
   },

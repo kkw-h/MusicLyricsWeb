@@ -42,6 +42,15 @@
               </svg>
             </button>
             <button 
+              @click.stop="shareCollection(collection)"
+              class="action-btn share-btn"
+              title="分享合集"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+              </svg>
+            </button>
+            <button 
               @click.stop="deleteCollection(collection.id)"
               class="action-btn delete-btn"
               title="删除合集"
@@ -138,6 +147,45 @@
         </div>
       </div>
     </div>
+
+    <!-- 分享合集弹窗 -->
+    <div v-if="showShareModal" class="modal-overlay" @click="closeShareModal">
+      <div class="modal-content share-modal" @click.stop>
+        <div class="share-header">
+          <h3>分享合集</h3>
+          <button @click="closeShareModal" class="close-btn">×</button>
+        </div>
+        
+        <div class="share-content">
+          <div class="collection-preview">
+            <h4>{{ selectedCollection?.name }}</h4>
+            <p class="collection-desc">{{ selectedCollection?.description || '暂无描述' }}</p>
+            <p class="song-count">{{ selectedCollection?.songs?.length || 0 }} 首歌曲</p>
+          </div>
+          
+          <div class="qr-section">
+            <div class="qr-container">
+              <img v-if="qrCodeDataUrl" :src="qrCodeDataUrl" alt="分享二维码" class="qr-code" />
+              <div v-else class="qr-loading">
+                <div class="spinner"></div>
+                <span>生成二维码中...</span>
+              </div>
+            </div>
+            <p class="qr-tip">使用微信或其他扫码工具扫描二维码<br>即可快速导入该歌单到自己的合集中</p>
+          </div>
+          
+          <div class="share-actions">
+            <button @click="copyShareLink" class="copy-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+              </svg>
+              复制链接
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -152,7 +200,10 @@ export default {
       modalForm: {
         name: '',
         description: ''
-      }
+      },
+      showShareModal: false,
+      selectedCollection: null,
+      qrCodeDataUrl: ''
     }
   },
   mounted() {
@@ -274,6 +325,107 @@ export default {
     addSongToCollection(collectionId) {
       // 这里可以跳转到搜索页面或显示歌曲选择器
       this.$router.push('/search')
+    },
+
+    shareCollection(collection) {
+      this.selectedCollection = collection
+      this.generateQRCode(collection)
+      this.showShareModal = true
+    },
+
+    async generateQRCode(collection) {
+      try {
+        const QRCode = (await import('qrcode')).default
+        
+        // 创建分享数据
+        const shareData = {
+          id: collection.id,
+          name: collection.name,
+          description: collection.description,
+          songs: collection.songs,
+          createdAt: collection.createdAt
+        }
+        
+        // 生成分享URL
+        const baseUrl = window.location.origin
+        const shareUrl = `${baseUrl}/share?data=${encodeURIComponent(JSON.stringify(shareData))}`
+        
+        // 生成二维码，优化样式和清晰度
+        this.qrCodeDataUrl = await QRCode.toDataURL(shareUrl, {
+          width: 300,
+          height: 300,
+          margin: 3,
+          color: {
+            dark: '#1976d2',
+            light: '#ffffff'
+          },
+          errorCorrectionLevel: 'M',
+          type: 'image/png',
+          quality: 0.92,
+          rendererOpts: {
+            quality: 0.92
+          }
+        })
+      } catch (error) {
+        console.error('生成二维码失败:', error)
+        alert('生成二维码失败，请稍后重试')
+      }
+    },
+
+    closeShareModal() {
+      this.showShareModal = false
+      this.selectedCollection = null
+      this.qrCodeDataUrl = ''
+    },
+
+    copyShareLink() {
+      if (this.selectedCollection) {
+        const shareData = {
+          id: this.selectedCollection.id,
+          name: this.selectedCollection.name,
+          description: this.selectedCollection.description,
+          songs: this.selectedCollection.songs,
+          createdAt: this.selectedCollection.createdAt
+        }
+        
+        const baseUrl = window.location.origin
+        const shareUrl = `${baseUrl}/share?data=${encodeURIComponent(JSON.stringify(shareData))}`
+        
+        // 检查是否支持现代剪贴板API
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(shareUrl).then(() => {
+            alert('分享链接已复制到剪贴板')
+          }).catch(() => {
+            this.fallbackCopyToClipboard(shareUrl)
+          })
+        } else {
+          // 使用降级方案
+          this.fallbackCopyToClipboard(shareUrl)
+        }
+      }
+    },
+
+    fallbackCopyToClipboard(text) {
+      try {
+        const textArea = document.createElement('textarea')
+        textArea.value = text
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-999999px'
+        textArea.style.top = '-999999px'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        const successful = document.execCommand('copy')
+        document.body.removeChild(textArea)
+        
+        if (successful) {
+          alert('分享链接已复制到剪贴板')
+        } else {
+          alert('复制失败，请手动复制链接')
+        }
+      } catch (err) {
+        alert('复制失败，请手动复制链接')
+      }
     },
 
     playLyrics(song) {
@@ -649,6 +801,181 @@ export default {
   background: #ccc;
   cursor: not-allowed;
 }
+
+.save-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* 分享按钮样式 */
+.share-btn {
+  background: #4caf50;
+  color: white;
+}
+
+.share-btn:hover {
+  background: #45a049;
+}
+
+/* 分享弹窗样式 */
+.share-modal {
+  max-width: 500px;
+  padding: 0;
+}
+
+.share-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.share-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.share-content {
+  padding: 24px;
+}
+
+.collection-preview {
+  text-align: center;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.collection-preview h4 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.collection-desc {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.song-count {
+  margin: 0;
+  font-size: 12px;
+  color: #1976d2;
+  font-weight: 500;
+}
+
+.qr-section {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.qr-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 16px;
+  min-height: 300px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.qr-code {
+  max-width: 300px;
+  max-height: 300px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  background: white;
+  padding: 8px;
+}
+
+.qr-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 300px;
+  height: 300px;
+  background: #f5f5f5;
+  border-radius: 12px;
+  color: #666;
+  font-size: 14px;
+}
+
+.qr-loading .spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e0e0e0;
+  border-top: 3px solid #1976d2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+.qr-tip {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.share-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1976d2;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.copy-btn:hover {
+  background: #1565c0;
+}
+
+.copy-btn:hover {
+  background: #1565c0;
+}
+
+
 
 @media (max-width: 480px) {
   .collection-page {
