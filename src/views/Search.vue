@@ -191,6 +191,36 @@
         </div>
       </div>
     </div>
+
+    <!-- 成功提示弹框 -->
+    <div v-if="showSuccessToast" class="toast-overlay">
+      <div class="toast-content success-toast">
+        <div class="toast-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+          </svg>
+        </div>
+        <div class="toast-message">
+          <h4>操作成功</h4>
+          <p>{{ successMessage }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 失败提示弹框 -->
+    <div v-if="showErrorToast" class="toast-overlay">
+      <div class="toast-content error-toast">
+        <div class="toast-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+        </div>
+        <div class="toast-message">
+          <h4>操作失败</h4>
+          <p>{{ errorMessage }}</p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -213,7 +243,12 @@ export default {
       showCreateModal: false,
       selectedSong: null,
       newCollectionName: '',
-      newCollectionDescription: ''
+      newCollectionDescription: '',
+      // 提示弹框相关数据
+      showSuccessToast: false,
+      showErrorToast: false,
+      successMessage: '',
+      errorMessage: ''
     }
   },
   mounted() {
@@ -316,7 +351,7 @@ export default {
         )
         
         if (songExists) {
-          alert('该歌曲已在此合集中')
+          this.showErrorMessage('该歌曲已在此合集中')
           return
         }
 
@@ -333,7 +368,7 @@ export default {
         collection.songs.push(songToAdd)
         this.saveCollections()
         
-        alert(`已添加到合集"${collection.name}"`)
+        this.showSuccessMessage(`已添加到合集"${collection.name}"`)
         this.closeCollectionModal()
       }
     },
@@ -366,9 +401,27 @@ export default {
       this.collections.unshift(newCollection)
       this.saveCollections()
       
-      alert(`已创建合集"${newCollection.name}"${this.selectedSong ? '并添加歌曲' : ''}`)
+      this.showSuccessMessage(`已创建合集"${newCollection.name}"${this.selectedSong ? '并添加歌曲' : ''}`)
       this.closeCreateModal()
       this.closeCollectionModal()
+    },
+
+    // 显示成功提示
+    showSuccessMessage(message) {
+      this.successMessage = message
+      this.showSuccessToast = true
+      setTimeout(() => {
+        this.showSuccessToast = false
+      }, 3000)
+    },
+
+    // 显示错误提示
+    showErrorMessage(message) {
+      this.errorMessage = message
+      this.showErrorToast = true
+      setTimeout(() => {
+        this.showErrorToast = false
+      }, 3000)
     }
   }
 }
@@ -1019,5 +1072,133 @@ export default {
   padding: 2px 6px;
   border-radius: 10px;
   display: inline-block;
+}
+
+/* 提示弹框样式 */
+.toast-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  max-width: 400px;
+  min-width: 280px;
+  pointer-events: auto;
+  animation: toastSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.toast-content.success-toast {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.toast-content.error-toast {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  color: white;
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.toast-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.toast-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.toast-message {
+  flex: 1;
+}
+
+.toast-message h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.toast-message p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  opacity: 0.95;
+}
+
+/* 弹框动画 */
+@keyframes toastSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .toast-content {
+    margin: 0 20px;
+    min-width: auto;
+    max-width: calc(100vw - 40px);
+  }
+  
+  .toast-message h4 {
+    font-size: 15px;
+  }
+  
+  .toast-message p {
+    font-size: 13px;
+  }
+  
+  .toast-icon {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .toast-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 320px) {
+  .toast-content {
+    padding: 14px 16px;
+    gap: 10px;
+  }
+  
+  .toast-message h4 {
+    font-size: 14px;
+  }
+  
+  .toast-message p {
+    font-size: 12px;
+  }
 }
 </style>

@@ -155,9 +155,7 @@ export default {
         console.log('从API获取歌词')
         const params = {
           id: this.currentSong.id,
-          source: this.currentSong.source,
-          format: 1, // LRC格式
-          include_translation: true
+          source: this.currentSong.source
         }
 
         const response = await musicAPI.getLyrics(params)
@@ -168,7 +166,8 @@ export default {
           throw new Error(response.message || '获取歌词失败')
         }
         
-        this.rawLyrics = response.raw_lyric || response.data?.raw_lyric || ''
+        // 根据新的API响应格式获取歌词
+        this.rawLyrics = response.data?.lyric || response.data?.lrc || response.data?.raw_lyric || ''
         
         // 只有成功获取到歌词时才进行缓存
         if (this.rawLyrics) {
