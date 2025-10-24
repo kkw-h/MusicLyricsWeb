@@ -6,14 +6,6 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
-    proxy: {
-      // 本地API代理到后端服务
-      '/api': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-        rewrite: (path) => path
-      }
-    }
   },
   build: {
     outDir: 'dist',
@@ -22,7 +14,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['vue', 'vue-router', 'axios']
+          vendor: ['vue', 'vue-router']
         }
       }
     }

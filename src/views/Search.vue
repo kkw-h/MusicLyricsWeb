@@ -12,7 +12,6 @@
           placeholder="请输入歌曲名称"
           class="search-input"
           @keyup.enter="handleSearch"
-          value="大石碎胸口"
         />
         <button 
           @click="handleSearch" 
