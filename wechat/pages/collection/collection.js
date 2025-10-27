@@ -4,6 +4,12 @@ import { generateQRCodeDataURL } from '../../utils/qrcode'
 
 const app = getApp()
 
+// 平台信息映射
+const PLATFORMS = {
+  0: { name: 'netease', display_name: '网易云音乐' },
+  1: { name: 'qqmusic', display_name: 'QQ音乐' }
+}
+
 Page({
   data: {
     collections: [],
@@ -33,6 +39,7 @@ Page({
   },
 
   onShow() {
+    console.log('页面显示，尝试加载合集数据')
     this.loadCollections()
   },
 
@@ -207,18 +214,82 @@ Page({
   viewSongLyrics(event) {
     const { collection: collectionIndex, song: songIndex } = event.currentTarget.dataset
     const collection = this.data.collections[collectionIndex]
-    if (!collection) return
+    if (!collection) {
+      console.error('未找到合集信息', { collectionIndex, collections: this.data.collections })
+      wx.showToast({
+        title: '合集信息错误',
+        icon: 'error',
+        duration: 2000
+      })
+      return
+    }
+    
     const song = collection.songs[songIndex]
-    if (!song) return
+    if (!song) {
+      console.error('未找到歌曲信息', { songIndex, songs: collection.songs })
+      wx.showToast({
+        title: '歌曲信息错误',
+        icon: 'error',
+        duration: 2000
+      })
+      return
+    }
 
-    const query = []
-    if (song.id) query.push(`id=${encodeURIComponent(song.id)}`)
-    if (song.source !== undefined) query.push(`source=${song.source}`)
-    if (song.title) query.push(`title=${encodeURIComponent(song.title)}`)
-    if (song.artist) query.push(`artist=${encodeURIComponent(song.artist)}`)
+    // 确保必要的参数存在
+    if (!song.id) {
+      console.error('歌曲ID缺失', song)
+      wx.showToast({
+        title: '歌曲ID缺失',
+        icon: 'error',
+        duration: 2000
+      })
+      return
+    }
 
-    wx.navigateTo({
-      url: `/pages/lyrics/lyrics?${query.join('&')}`
+    console.log('跳转到歌词页面', {
+      song,
+      source: song.source
+    })
+
+    // 将歌曲数据保存到本地存储
+    const platform = PLATFORMS[song.source] || PLATFORMS[1]
+    const songData = {
+      id: song.id,
+      source: song.source,
+      title: song.title || '',
+      artist: song.artist || '',
+      album: song.album || '',
+      platform_name: platform.display_name,
+      timestamp: Date.now() // 添加时间戳用于数据有效性验证
+    }
+
+    try {
+      wx.setStorageSync('currentPlayingSong', songData)
+      console.log('歌曲数据已保存到本地存储', songData)
+    } catch (error) {
+      console.error('保存歌曲数据失败', error)
+      wx.showToast({
+        title: '数据保存失败',
+        icon: 'error',
+        duration: 2000
+      })
+      return
+    }
+    
+    // 使用switchTab跳转到歌词页面
+    wx.switchTab({
+      url: '/pages/lyrics/lyrics',
+      success: () => {
+        console.log('成功跳转到歌词页面')
+      },
+      fail: (error) => {
+        console.error('跳转失败', error)
+        wx.showToast({
+          title: '跳转失败',
+          icon: 'error',
+          duration: 2000
+        })
+      }
     })
   },
 

@@ -124,15 +124,23 @@
 
 .collection-header-row {
   display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
+  flex-direction: column !important;
   padding: 32rpx !important;
   cursor: pointer !important;
   transition: background-color 0.2s ease !important;
+  gap: 16rpx !important;
 }
 
 .collection-header-row:hover {
   background: #f8f9fa !important;
+}
+
+/* 第一行：标题 */
+.collection-title-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
 }
 
 .collection-info {
@@ -145,10 +153,17 @@
   font-weight: 600 !important;
   color: #2c3e50 !important;
   display: block !important;
-  margin-bottom: 8rpx !important;
+  margin: 0 !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
+}
+
+/* 第二行：合集信息 */
+.collection-meta-row {
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
 }
 
 .collection-meta {
@@ -156,31 +171,48 @@
   color: #6c757d !important;
   display: block !important;
   line-height: 1.4 !important;
+  margin: 0 !important;
+}
+
+/* 第三行：操作图标 */
+.collection-actions-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  gap: 16rpx !important;
 }
 
 .collection-actions {
   display: flex !important;
   align-items: center !important;
   gap: 12rpx !important;
-  flex-wrap: nowrap !important;
-  justify-content: flex-end !important;
-  margin-left: 24rpx !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-start !important;
 }
 
 .action-btn {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 64rpx !important;
-  height: 64rpx !important;
-  border-radius: 50% !important;
-  font-size: 24rpx !important;
-  color: #6c757d !important;
-  background: #f8f9fa !important;
-  border: 1rpx solid rgba(0, 0, 0, 0.1) !important;
+  width: 72rpx !important;
+  height: 72rpx !important;
+  font-size: 32rpx !important;
   transition: all 0.2s ease !important;
   position: relative !important;
   box-sizing: border-box !important;
+  margin: 4rpx !important;
+  cursor: pointer !important;
+}
+
+.action-btn:hover {
+  transform: scale(1.05) !important;
+}
+
+.action-btn.disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
 }
 
 .action-btn::before,
@@ -196,37 +228,29 @@
   opacity: 0.6 !important;
 }
 
-.edit-btn {
-  background: #e3f2fd !important;
-  color: #1976d2 !important;
-}
 
 .share-btn {
   background: #e8f5e8 !important;
   color: #2e7d32 !important;
 }
 
-.cache-btn {
-  background: #fff3e0 !important;
-  color: #f57c00 !important;
-}
 
-.delete-btn {
-  background: #ffebee !important;
-  color: #d32f2f !important;
-}
 
 .cache-btn.caching {
   position: relative !important;
   color: #1976d2 !important;
   background: #e3f2fd !important;
 }
-
 .btn-icon {
+  width: 32rpx !important;
+  height: 32rpx !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 28rpx !important;
+}
+
+.expand-icon {
+  font-size: 32rpx !important;
   line-height: 1 !important;
 }
 
@@ -240,18 +264,18 @@
 }
 
 .expand-btn {
-  width: 64rpx !important;
-  height: 64rpx !important;
+  width: 72rpx !important;
+  height: 72rpx !important;
   border-radius: 50% !important;
   background: #f8f9fa !important;
   color: #6c757d !important;
-  border: 1rpx solid rgba(0, 0, 0, 0.1) !important;
   font-size: 32rpx !important;
   transition: all 0.3s ease !important;
   position: relative !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  margin-left: auto !important;
 }
 
 .expand-btn::before,
@@ -269,7 +293,7 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 28rpx !important;
+  font-size: 32rpx !important;
   line-height: 1 !important;
 }
 
@@ -288,7 +312,7 @@
 
 .add-song-btn {
   margin-top: 24rpx !important;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background: #1976d2 !important;
   color: #ffffff !important;
   padding: 24rpx 32rpx !important;
   border-radius: 50rpx !important;
@@ -379,15 +403,7 @@
   flex-shrink: 0 !important;
 }
 
-.play-btn {
-  background: #e8f5e8 !important;
-  color: #2e7d32 !important;
-}
 
-.remove-btn {
-  background: #ffebee !important;
-  color: #d32f2f !important;
-}
 
 /* 模态框样式 */
 .modal-overlay {
@@ -431,6 +447,7 @@
 .form-textarea {
   width: 100% !important;
   padding: 24rpx !important;
+  height: 80rpx !important;
   border: 2rpx solid #e9ecef !important;
   border-radius: 16rpx !important;
   font-size: 28rpx !important;
@@ -488,7 +505,7 @@
   padding: 24rpx 36rpx !important;
   border-radius: 50rpx !important;
   font-size: 28rpx !important;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background: #1976d2 !important;
   color: #ffffff !important;
   border: none !important;
   box-shadow: 0 8rpx 32rpx rgba(102, 126, 234, 0.4) !important;
@@ -812,18 +829,42 @@
     font-size: 26rpx !important;
   }
   
-  .collection-item {
+  .collection-header-row {
     padding: 24rpx !important;
+    gap: 12rpx !important;
   }
   
   .collection-name {
     font-size: 28rpx !important;
   }
   
+  .collection-meta {
+    font-size: 22rpx !important;
+  }
+  
   .action-btn {
-    width: 60rpx !important;
-    height: 60rpx !important;
-    font-size: 24rpx !important;
+    width: 64rpx !important;
+    height: 64rpx !important;
+    font-size: 28rpx !important;
+    margin: 2rpx !important;
+  }
+  
+  .expand-btn {
+    width: 64rpx !important;
+    height: 64rpx !important;
+    font-size: 28rpx !important;
+  }
+  
+  .btn-icon {
+    font-size: 28rpx !important;
+  }
+  
+  .expand-icon {
+    font-size: 28rpx !important;
+  }
+  
+  .collection-actions {
+    gap: 8rpx !important;
   }
   
   .song-item {

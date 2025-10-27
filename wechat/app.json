@@ -20,15 +20,21 @@
     "list": [
       {
         "pagePath": "pages/search/search",
-        "text": "搜索"
+        "text": "搜索",
+        "iconPath": "images/search-small.png",
+        "selectedIconPath": "images/search-selected-small.png"
       },
       {
         "pagePath": "pages/lyrics/lyrics",
-        "text": "歌词"
+        "text": "歌词",
+        "iconPath": "images/lyrics-small.png",
+        "selectedIconPath": "images/lyrics-selected-small.png"
       },
       {
         "pagePath": "pages/collection/collection",
-        "text": "合集"
+        "text": "合集",
+        "iconPath": "images/collection-small.png",
+        "selectedIconPath": "images/collection-selected-small.png"
       }
     ]
   },

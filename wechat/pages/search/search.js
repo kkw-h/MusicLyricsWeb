@@ -3,6 +3,12 @@ import { getCollections, setCollections } from '../../utils/storage'
 
 const app = getApp()
 
+// 平台信息映射
+const PLATFORMS = {
+  0: { name: 'netease', display_name: '网易云音乐' },
+  1: { name: 'qqmusic', display_name: 'QQ音乐' }
+}
+
 Page({
   data: {
     searchQuery: '',
@@ -30,6 +36,7 @@ Page({
   },
 
   onShow() {
+    console.log('页面显示')
     this.loadCollections()
   },
 
@@ -151,13 +158,14 @@ Page({
     })
 
     // 将歌曲数据保存到本地存储
+    const platform = PLATFORMS[this.data.selectedPlatform] || PLATFORMS[1]
     const songData = {
       id: song.id,
       source: this.data.selectedPlatform,
       title: song.name || song.title || '',
       artist: song.artist || '',
       album: song.album || '',
-      platform_name: song.platform_name || '',
+      platform_name: platform.display_name,
       timestamp: Date.now() // 添加时间戳用于数据有效性验证
     }
 
@@ -256,6 +264,7 @@ Page({
       artist: selectedSong.artist,
       album: selectedSong.album,
       source: selectedPlatform,
+      platform_name: (PLATFORMS[selectedPlatform] || PLATFORMS[1]).display_name,
       addedAt: new Date().toISOString()
     }
 
@@ -293,6 +302,7 @@ Page({
         artist: selectedSong.artist,
         album: selectedSong.album,
         source: selectedPlatform,
+        platform_name: (PLATFORMS[selectedPlatform] || PLATFORMS[1]).display_name,
         addedAt: new Date().toISOString()
       })
     }
@@ -324,7 +334,7 @@ Page({
       this.setData({
         showSuccessToast: false
       })
-    }, 3000)
+    }, 1000)
   },
 
   showErrorMessage(message) {

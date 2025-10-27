@@ -22,15 +22,21 @@ Page({
   onLoad(options) {
     this.initializePage(options)
   },
-
+  onShow() {
+  },
   onHide() {
+    console.log('页面隐藏，清除定时器')
     this.clearTimer()
   },
 
   onUnload() {
+    console.log('页面卸载，清除定时器')
     this.clearTimer()
   },
-
+  onRouteDone() {
+    console.log('路由完成，尝试初始化歌曲数据')
+    this.initializePage()
+  },
   initializePage(options = {}) {
     console.log('初始化页面，URL参数:', options)
     
@@ -47,7 +53,7 @@ Page({
         // 如果数据超过1小时，认为过期
         if (dataAge > 60 * 60 * 1000) {
           console.log('本地存储的歌曲数据已过期，清除')
-          wx.removeStorageSync('currentPlayingSong')
+          // wx.removeStorageSync('currentPlayingSong')
           currentPlayingSong = null
         }
       }
@@ -60,7 +66,7 @@ Page({
     if (currentPlayingSong && currentPlayingSong.id) {
       const song = {
         id: currentPlayingSong.id,
-        source: Number(currentPlayingSong.source) || 1,
+        source: currentPlayingSong.source,
         title: currentPlayingSong.title || '未知歌曲',
         artist: currentPlayingSong.artist || '未知歌手',
         album: currentPlayingSong.album || '',
@@ -71,7 +77,7 @@ Page({
       this.loadLyrics()
       
       // 清除本地存储的临时数据，避免下次误用
-      wx.removeStorageSync('currentPlayingSong')
+      // wx.removeStorageSync('currentPlayingSong')
       return
     }
 
@@ -136,10 +142,14 @@ Page({
       if (response.code !== 200) {
         throw new Error(response.message || '获取歌词失败')
       }
-
-      const rawLyrics =
-        response?.data?.lyric?.lyric ||
-        ''
+      
+      let rawLyrics
+      if (song.source === 1) {
+        rawLyrics = response?.data?.lyric?.lyric || ''
+      }else{
+        console.log('处理非1平台歌词:', response)
+        rawLyrics = response?.data?.lyric || ''
+      }
 
       console.log('API返回的歌词数据:', {
         lyric: response?.data?.lyric.lyric
@@ -152,7 +162,9 @@ Page({
           totalTime: 0,
           formattedTotalTime: '00:00'
         })
+        console.log('处理空歌词')
       } else {
+        console.log('处理非空歌词')
         this.saveLyricsToCache(cacheKey, rawLyrics, song)
         this.processLyrics(rawLyrics)
       }
@@ -170,7 +182,7 @@ Page({
   },
 
   processLyrics(rawLyrics) {
-    
+    console.log("处理歌词")
     // 确保rawLyrics是字符串类型
     if (typeof rawLyrics !== 'string') {
       console.error('rawLyrics不是字符串类型:', rawLyrics)

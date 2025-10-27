@@ -24,11 +24,7 @@
         <view class="play-icon" wx:if="{{!isPlaying}}">▶</view>
         <view class="pause-icon" wx:else>⏸</view>
       </button>
-      <view class="time-display">
-        <view class="current-time">{{formattedCurrentTime}}</view>
-        <view class="separator">/</view>
-        <view class="total-time">{{formattedTotalTime}}</view>
-      </view>
+      <view class="time-display">{{formattedCurrentTime}}/{{formattedTotalTime}}</view>
       <button class="control-btn reset-btn" bindtap="resetTime">重置</button>
     </view>
 

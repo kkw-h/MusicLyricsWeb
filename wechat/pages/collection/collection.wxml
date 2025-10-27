@@ -19,38 +19,41 @@
     <block wx:for="{{collections}}" wx:key="id" wx:for-index="index">
       <view class="collection-item">
         <view class="collection-header-row" data-index="{{index}}" bindtap="toggleCollection">
-          <view class="collection-info">
+          <!-- 第一行：标题 -->
+          <view class="collection-title-row">
             <text class="collection-name">{{item.name}}</text>
+          </view>
+          
+          <!-- 第二行：合集信息 -->
+          <view class="collection-meta-row">
             <text class="collection-meta">
               {{item.songs.length}} 首歌曲 · 创建于 {{item.formattedDate}}
             </text>
           </view>
-          <view class="collection-actions">
-            <button class="action-btn edit-btn" data-index="{{index}}" catchtap="editCollection">
-              <view class="btn-icon">✏️</view>
-            </button>
-            <button class="action-btn share-btn" data-index="{{index}}" catchtap="shareCollection">
-              <view class="btn-icon">📤</view>
-            </button>
-            <button
-              class="action-btn cache-btn {{item.caching ? 'caching' : ''}}"
+          
+          <!-- 第三行：操作图标 -->
+          <view class="collection-actions-row">
+            <view class="action-btn edit-btn" data-index="{{index}}" catchtap="editCollection">
+              <image class="btn-icon" src="/images/edit.svg" mode="aspectFit"></image>
+            </view>
+            <view
+              class="action-btn cache-btn {{item.caching ? 'caching' : ''}} {{item.caching || item.songs.length === 0 ? 'disabled' : ''}}"
               data-index="{{index}}"
-              catchtap="cacheCollectionLyrics"
-              disabled="{{item.caching || item.songs.length === 0}}"
+              catchtap="{{item.caching || item.songs.length === 0 ? '' : 'cacheCollectionLyrics'}}"
             >
               <view wx:if="{{item.caching}}" class="cache-spinner"></view>
-              <view wx:else class="btn-icon">💾</view>
-            </button>
-            <button class="action-btn delete-btn" data-index="{{index}}" catchtap="deleteCollection">
-              <view class="btn-icon">🗑️</view>
-            </button>
-            <button
+              <image class="btn-icon" src="/images/xiazai.svg" mode="aspectFit"></image>
+            </view>
+            <view class="action-btn delete-btn" data-index="{{index}}" catchtap="deleteCollection">
+              <image class="btn-icon" src="/images/shanchu.svg" mode="aspectFit"></image>
+            </view>
+            <view
               class="expand-btn {{item.expanded ? 'expanded' : ''}}"
               data-index="{{index}}"
               catchtap="toggleCollection"
             >
-              <view class="expand-icon">⌄</view>
-            </button>
+              <view class="expand-icon">▼</view>
+            </view>
           </view>
         </view>
 
@@ -71,22 +74,22 @@
                   <text class="song-artist">{{item.artist}}</text>
                 </view>
                 <view class="song-actions">
-                  <button
+                  <view
                     class="action-btn play-btn"
                     data-song="{{songIndex}}"
                     data-collection="{{index}}"
                     catchtap="viewSongLyrics"
                   >
-                    <view class="btn-icon">🎵</view>
-                  </button>
-                  <button
+                    <view class="btn-icon">▶</view>
+                  </view>
+                  <view
                     class="action-btn remove-btn"
                     data-song="{{songIndex}}"
                     data-collection="{{index}}"
                     catchtap="removeSong"
                   >
-                    <view class="btn-icon">✕</view>
-                  </button>
+              <image class="btn-icon" src="/images/shanchu.svg" mode="aspectFit"></image>
+                  </view>
                 </view>
               </view>
             </block>
