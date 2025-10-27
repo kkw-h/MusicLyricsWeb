@@ -1,0 +1,216 @@
+<view class="collection-page">
+  <view class="collection-header">
+    <button class="add-btn" bindtap="openCreateModal">
+      <view class="add-icon">
+        <text>+</text>
+      </view>
+      <text>新建合集</text>
+    </button>
+  </view>
+
+  <view wx:if="{{collections.length === 0}}" class="empty-state">
+    <view class="empty-icon">📁</view>
+    <text class="empty-title">暂无合集</text>
+    <text class="empty-tip">创建合集来收藏你喜欢的歌曲</text>
+    <button class="create-first-btn" bindtap="openCreateModal">创建第一个合集</button>
+  </view>
+
+  <view wx:else class="collections-list">
+    <block wx:for="{{collections}}" wx:key="id" wx:for-index="index">
+      <view class="collection-item">
+        <view class="collection-header-row" data-index="{{index}}" bindtap="toggleCollection">
+          <view class="collection-info">
+            <text class="collection-name">{{item.name}}</text>
+            <text class="collection-meta">
+              {{item.songs.length}} 首歌曲 · 创建于 {{item.formattedDate}}
+            </text>
+          </view>
+          <view class="collection-actions">
+            <button class="action-btn edit-btn" data-index="{{index}}" catchtap="editCollection">
+              <view class="btn-icon">✏️</view>
+            </button>
+            <button class="action-btn share-btn" data-index="{{index}}" catchtap="shareCollection">
+              <view class="btn-icon">📤</view>
+            </button>
+            <button
+              class="action-btn cache-btn {{item.caching ? 'caching' : ''}}"
+              data-index="{{index}}"
+              catchtap="cacheCollectionLyrics"
+              disabled="{{item.caching || item.songs.length === 0}}"
+            >
+              <view wx:if="{{item.caching}}" class="cache-spinner"></view>
+              <view wx:else class="btn-icon">💾</view>
+            </button>
+            <button class="action-btn delete-btn" data-index="{{index}}" catchtap="deleteCollection">
+              <view class="btn-icon">🗑️</view>
+            </button>
+            <button
+              class="expand-btn {{item.expanded ? 'expanded' : ''}}"
+              data-index="{{index}}"
+              catchtap="toggleCollection"
+            >
+              <view class="expand-icon">⌄</view>
+            </button>
+          </view>
+        </view>
+
+        <view wx:if="{{item.expanded}}" class="collection-content">
+          <view wx:if="{{item.songs.length === 0}}" class="empty-collection">
+            <text>该合集暂无歌曲</text>
+            <button class="add-song-btn" data-index="{{index}}" bindtap="goToSearch">
+              添加歌曲
+            </button>
+          </view>
+
+          <view wx:else class="songs-list">
+            <block wx:for="{{item.songs}}" wx:key="id" wx:for-index="songIndex">
+              <view class="song-item">
+                <view class="song-index">{{songIndex + 1}}</view>
+                <view class="song-info">
+                  <text class="song-title">{{item.title}}</text>
+                  <text class="song-artist">{{item.artist}}</text>
+                </view>
+                <view class="song-actions">
+                  <button
+                    class="action-btn play-btn"
+                    data-song="{{songIndex}}"
+                    data-collection="{{index}}"
+                    catchtap="viewSongLyrics"
+                  >
+                    <view class="btn-icon">🎵</view>
+                  </button>
+                  <button
+                    class="action-btn remove-btn"
+                    data-song="{{songIndex}}"
+                    data-collection="{{index}}"
+                    catchtap="removeSong"
+                  >
+                    <view class="btn-icon">✕</view>
+                  </button>
+                </view>
+              </view>
+            </block>
+          </view>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <!-- 新建/编辑合集弹窗 -->
+  <view wx:if="{{showModal}}" class="modal-overlay" bindtap="closeModal">
+    <view class="modal-content" catchtap="noop">
+      <text class="modal-title">{{editingCollectionId ? '编辑合集' : '新建合集'}}</text>
+      <view class="form-group">
+        <text class="form-label">合集名称</text>
+        <input
+          class="form-input"
+          value="{{modalForm.name}}"
+          placeholder="请输入合集名称"
+          bindinput="onModalNameChange"
+          confirm-type="done"
+          bindconfirm="saveCollection"
+        />
+      </view>
+      <view class="form-group">
+        <text class="form-label">描述（可选）</text>
+        <textarea
+          class="form-textarea"
+          value="{{modalForm.description}}"
+          placeholder="请输入合集描述"
+          bindinput="onModalDescriptionChange"
+        ></textarea>
+      </view>
+      <view class="modal-actions">
+        <button class="cancel-btn" bindtap="closeModal">取消</button>
+        <button
+          class="save-btn"
+          bindtap="saveCollection"
+          disabled="{{!canSaveCollection}}"
+        >
+          {{editingCollectionId ? '保存' : '创建'}}
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分享合集弹窗 -->
+  <view wx:if="{{showShareModal}}" class="modal-overlay" bindtap="closeShareModal">
+    <view class="modal-content share-modal" catchtap="noop">
+      <view class="share-header">
+        <text class="modal-title">分享合集</text>
+        <button class="close-btn" bindtap="closeShareModal">×</button>
+      </view>
+      <view class="share-content">
+        <view class="collection-preview">
+          <text class="preview-name">{{selectedCollection.name}}</text>
+          <text class="preview-desc">{{selectedCollection.description || '暂无描述'}}</text>
+          <text class="preview-count">{{selectedCollection.songs.length}} 首歌曲</text>
+        </view>
+        <view class="qr-section">
+          <view class="qr-container">
+            <image
+              wx:if="{{qrCodeImage}}"
+              src="{{qrCodeImage}}"
+              mode="aspectFit"
+              class="qr-image"
+            />
+            <view wx:else class="qr-loading">
+              <view class="spinner"></view>
+              <text>生成二维码中...</text>
+            </view>
+          </view>
+          <text class="qr-tip">
+            使用微信扫描二维码即可导入此合集到您的歌单中
+          </text>
+        </view>
+        <view class="share-actions">
+          <button class="copy-btn" bindtap="copyShareLink">
+            复制链接
+          </button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 缓存进度弹窗 -->
+  <view wx:if="{{cacheProgress.show}}" class="cache-progress-overlay">
+    <view class="cache-progress-modal">
+      <view class="progress-header">
+        <text class="modal-title">正在缓存歌词</text>
+        <view class="progress-info">
+          <text class="collection-name">{{cacheProgress.collectionName}}</text>
+          <text class="progress-count">
+            {{cacheProgress.current}} / {{cacheProgress.total}}
+          </text>
+        </view>
+      </view>
+      
+      <view class="progress-content">
+        <view class="progress-bar-container">
+          <view class="progress-bar">
+            <view
+              class="progress-fill"
+              style="width: {{cacheProgress.percentage}}%;"
+            ></view>
+          </view>
+          <view class="progress-percentage">
+            {{Math.round(cacheProgress.percentage)}}%
+          </view>
+        </view>
+        
+        <view wx:if="{{cacheProgress.currentSong}}" class="current-song">
+          <view class="song-icon">🎵</view>
+          <view class="song-details">
+            <text class="song-title">{{cacheProgress.currentSong.title}}</text>
+            <text class="song-artist">{{cacheProgress.currentSong.artist}}</text>
+          </view>
+        </view>
+      </view>
+      
+      <view class="progress-tip">
+        <text>正在为您缓存歌词，请稍候...</text>
+        <text class="tip-note">缓存完成后可离线查看歌词</text>
+      </view>
+    </view>
+  </view>
+</view>

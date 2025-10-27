@@ -198,40 +198,76 @@
 }
 
 .song-actions {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24rpx;
-  flex-wrap: wrap;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16rpx !important;
+  flex-wrap: nowrap !important;
+  margin-top: 16rpx !important;
+  box-sizing: border-box !important;
 }
 
-.collection-btn {
-  flex: 1 1 auto;
-  min-width: 0;
-  background: #4caf50;
-  color: #ffffff;
-  padding: 20rpx 36rpx;
-  border-radius: 40rpx;
-  font-size: 26rpx;
-  border: none;
-  box-shadow: 0 12rpx 24rpx rgba(76, 175, 80, 0.2);
-  text-align: center;
+.song-actions .collection-btn {
+  flex: 1 !important;
+  min-width: 0 !important;
+  max-width: calc(100% - 88rpx) !important;
+  background: #4caf50 !important;
+  background-color: #4caf50 !important;
+  color: #ffffff !important;
+  padding: 18rpx 24rpx !important;
+  border-radius: 40rpx !important;
+  font-size: 26rpx !important;
+  border: none !important;
+  box-shadow: 0 8rpx 16rpx rgba(76, 175, 80, 0.2) !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  height: 72rpx !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  box-sizing: border-box !important;
 }
 
-.play-btn {
-  flex: 0 0 88rpx;
-  width: 88rpx;
-  height: 88rpx;
-  border-radius: 50%;
-  border: none;
-  background: #f5f5f5;
-  color: #1976d2;
-  font-size: 34rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 12rpx 24rpx rgba(25, 118, 210, 0.12);
+.song-actions .collection-btn::after {
+  border: none !important;
+  background: transparent !important;
+  content: none !important;
+}
+
+.song-actions .play-btn {
+  flex: 0 0 72rpx !important;
+  width: 72rpx !important;
+  height: 72rpx !important;
+  min-width: 72rpx !important;
+  min-height: 72rpx !important;
+  max-width: 72rpx !important;
+  max-height: 72rpx !important;
+  border-radius: 50% !important;
+  border: none !important;
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
+  background-color: #1976d2 !important;
+  color: #ffffff !important;
+  font-size: 28rpx !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 8rpx 16rpx rgba(25, 118, 210, 0.3) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+}
+
+.song-actions .play-btn::after {
+  border: none !important;
+  background: transparent !important;
+  content: none !important;
 }
 
 .empty-state {

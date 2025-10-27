@@ -1,0 +1,168 @@
+page {
+  background: #f5f6f8;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #333;
+}
+
+.page-container {
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #ffffff;
+  border-radius: 24rpx;
+  width: 90%;
+  max-width: 600rpx;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.2);
+  padding: 40rpx;
+  box-sizing: border-box;
+}
+
+.toast-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 32rpx 40rpx;
+  border-radius: 24rpx;
+  min-width: 560rpx;
+  box-shadow: 0 32rpx 64rpx rgba(0, 0, 0, 0.15);
+  pointer-events: auto;
+  animation: toastSlideIn 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: #ffffff;
+  box-sizing: border-box;
+}
+
+.toast-success {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+}
+
+.toast-error {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+}
+
+.toast-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.toast-icon image {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.toast-message {
+  font-size: 28rpx;
+  line-height: 1.4;
+}
+
+.toast-title {
+  font-weight: 600;
+  margin-bottom: 8rpx;
+  font-size: 34rpx;
+}
+
+.form-group {
+  margin-bottom: 24rpx;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 12rpx;
+  color: #333333;
+  font-weight: 500;
+  font-size: 28rpx;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 24rpx;
+  border: 2rpx solid #dddddd;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+  background: #ffffff;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  border-color: #1976d2;
+}
+
+.form-textarea {
+  min-height: 180rpx;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  padding: 20rpx 36rpx;
+  border: none;
+  background: #1976d2;
+  color: #ffffff;
+}
+
+.btn-disabled {
+  background: #cccccc;
+  color: #ffffff;
+}
+
+.btn-secondary {
+  background: #f5f5f5;
+  color: #666666;
+}
+
+@keyframes toastSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-40rpx) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

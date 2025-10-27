@@ -1,0 +1,327 @@
+.lyrics-page {
+  height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #ffffff !important;
+  color: #333333 !important;
+}
+
+.lyrics-header {
+  padding: 40rpx !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 30rpx !important;
+  background: #f8f9fa !important;
+  border-bottom: 2rpx solid #e0e0e0 !important;
+  position: relative !important;
+}
+
+.lyrics-header::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: -2rpx !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 2rpx !important;
+  background: linear-gradient(90deg, transparent, #1976d2, transparent) !important;
+  opacity: 0.3 !important;
+}
+
+.back-btn {
+  background: #e0e0e0 !important;
+  border: none !important;
+  color: #333333 !important;
+  padding: 16rpx !important;
+  border-radius: 50% !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s ease !important;
+  width: 64rpx !important;
+  height: 64rpx !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.back-btn:hover {
+  background: #d0d0d0 !important;
+}
+
+.back-icon {
+  font-size: 32rpx !important;
+}
+
+.song-info {
+  flex: 1 !important;
+}
+
+.song-title {
+  margin: 0 0 8rpx 0 !important;
+  font-size: 36rpx !important;
+  font-weight: 600 !important;
+  color: #1976d2 !important;
+}
+
+.song-artist {
+  margin: 0 !important;
+  font-size: 28rpx !important;
+  opacity: 0.8 !important;
+  color: #666666 !important;
+}
+
+.loading-state,
+.error-state,
+.empty-state {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 80rpx 40rpx !important;
+}
+
+.loading-spinner {
+  width: 80rpx !important;
+  height: 80rpx !important;
+  border: 6rpx solid #e0e0e0 !important;
+  border-top: 6rpx solid #1976d2 !important;
+  border-radius: 50% !important;
+  animation: spin 1s linear infinite !important;
+  margin-bottom: 30rpx !important;
+}
+
+.loading-text {
+  font-size: 28rpx !important;
+  color: #333333 !important;
+  margin-bottom: 10rpx !important;
+}
+
+.loading-source {
+  font-size: 24rpx !important;
+  color: #666666 !important;
+  opacity: 0.8 !important;
+}
+
+.error-icon,
+.empty-icon {
+  font-size: 96rpx !important;
+  margin-bottom: 32rpx !important;
+}
+
+.error-text,
+.empty-text {
+  font-size: 28rpx !important;
+  color: #333333 !important;
+  margin-bottom: 16rpx !important;
+}
+
+.retry-btn {
+  background: #e0e0e0 !important;
+  border: 2rpx solid #d0d0d0 !important;
+  color: #333333 !important;
+  padding: 16rpx 32rpx !important;
+  border-radius: 12rpx !important;
+  cursor: pointer !important;
+  margin-top: 30rpx !important;
+  font-size: 28rpx !important;
+}
+
+.empty-tip {
+  font-size: 26rpx !important;
+  opacity: 0.7 !important;
+  margin-top: 16rpx !important;
+  color: #666666 !important;
+}
+
+.lyrics-container {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.lyrics-controls {
+  padding: 30rpx 40rpx !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 30rpx !important;
+  background: #f8f9fa !important;
+  border-top: 2rpx solid #e0e0e0 !important;
+}
+
+.play-btn {
+  background: #1976d2 !important;
+  border: none !important;
+  color: white !important;
+  padding: 20rpx !important;
+  border-radius: 50% !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 80rpx !important;
+  height: 80rpx !important;
+}
+
+.play-btn:hover {
+  background: #1565c0 !important;
+  transform: scale(1.05) !important;
+}
+
+.play-btn.playing {
+  background: #1565c0 !important;
+}
+
+.play-icon,
+.pause-icon {
+  font-size: 36rpx !important;
+}
+
+.time-display {
+  flex: 1 !important;
+  text-align: center !important;
+  font-family: monospace !important;
+  font-size: 28rpx !important;
+  color: #333333 !important;
+}
+
+.separator {
+  margin: 0 10rpx !important;
+  opacity: 0.6 !important;
+}
+
+.reset-btn {
+  background: #ff5722 !important;
+  border: 2rpx solid #e64a19 !important;
+  color: white !important;
+  padding: 12rpx 24rpx !important;
+  border-radius: 12rpx !important;
+  cursor: pointer !important;
+  font-size: 24rpx !important;
+}
+
+.reset-btn:hover {
+  background: #e64a19 !important;
+}
+
+.lyrics-scroll-container {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding: 40rpx !important;
+  scroll-behavior: smooth !important;
+}
+
+.lyrics-scroll {
+  height: 100% !important;
+}
+
+.lyrics-list {
+  max-width: 1200rpx !important;
+  margin: 0 auto !important;
+}
+
+.lyrics-line {
+  padding: 16rpx 0 !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  font-size: 32rpx !important;
+  line-height: 1.4 !important;
+  color: #666666 !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+.lyrics-line.active {
+  color: #1976d2 !important;
+  font-weight: 600 !important;
+  font-size: 36rpx !important;
+}
+
+.lyrics-line:hover {
+  color: #1976d2 !important;
+}
+
+.lyric-text {
+  flex: 1 !important;
+  font-size: 32rpx !important;
+  line-height: 1.5 !important;
+}
+
+.lyric-time {
+  font-size: 24rpx !important;
+  color: #999999 !important;
+  margin-left: 20rpx !important;
+  flex-shrink: 0 !important;
+  opacity: 0.6 !important;
+  font-family: monospace !important;
+}
+
+.empty-tip {
+  font-size: 26rpx !important;
+  opacity: 0.7 !important;
+  margin-top: 16rpx !important;
+  color: #666666 !important;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 750rpx) {
+  .lyrics-header {
+    padding: 30rpx !important;
+  }
+  
+  .song-title {
+    font-size: 32rpx !important;
+  }
+  
+  .lyrics-controls {
+    padding: 24rpx 30rpx !important;
+  }
+  
+  .lyrics-scroll-container {
+    padding: 30rpx !important;
+  }
+  
+  .lyrics-line {
+    padding: 20rpx 24rpx !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8rpx !important;
+  }
+  
+  .lyric-text {
+    font-size: 30rpx !important;
+  }
+  
+  .lyric-time {
+    margin-left: 0 !important;
+    align-self: flex-end !important;
+  }
+}
+
+/* 滚动条样式 */
+.lyrics-scroll-container::-webkit-scrollbar {
+  width: 8rpx !important;
+}
+
+.lyrics-scroll-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1) !important;
+}
+
+.lyrics-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3) !important;
+  border-radius: 4rpx !important;
+}
+
+.lyrics-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.5) !important;
+}

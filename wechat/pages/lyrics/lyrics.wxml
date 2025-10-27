@@ -1,0 +1,67 @@
+<view class="lyrics-page">
+  <view class="lyrics-header">
+    <view class="song-info" wx:if="{{currentSong}}">
+      <view class="song-title">{{currentSong.title}}</view>
+      <view class="song-artist">{{currentSong.artist}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-state">
+    <view class="loading-spinner"></view>
+    <view class="loading-text">正在加载歌词...</view>
+    <view class="loading-source">{{loadingFromCache ? '从本地缓存加载' : '从网络获取'}}</view>
+  </view>
+
+  <view wx:elif="{{error}}" class="error-state">
+    <view class="error-icon">❌</view>
+    <view class="error-text">{{error}}</view>
+    <button class="retry-btn" bindtap="loadLyrics">重试</button>
+  </view>
+
+  <view wx:elif="{{parsedLyrics.length > 0}}" class="lyrics-container">
+    <view class="lyrics-controls">
+      <button class="play-btn {{isPlaying ? 'playing' : ''}}" bindtap="togglePlay">
+        <view class="play-icon" wx:if="{{!isPlaying}}">▶</view>
+        <view class="pause-icon" wx:else>⏸</view>
+      </button>
+      <view class="time-display">
+        <view class="current-time">{{formattedCurrentTime}}</view>
+        <view class="separator">/</view>
+        <view class="total-time">{{formattedTotalTime}}</view>
+      </view>
+      <button class="control-btn reset-btn" bindtap="resetTime">重置</button>
+    </view>
+
+    <view class="lyrics-scroll-container">
+      <scroll-view
+        class="lyrics-scroll"
+        scroll-y
+        scroll-into-view="{{currentScrollId}}"
+        scroll-with-animation
+      >
+        <view class="lyrics-list">
+          <block wx:for="{{parsedLyrics}}" wx:key="index" wx:for-index="index">
+            <view
+              class="lyrics-line {{currentLineIndex === index ? 'active' : ''}}"
+              id="line-{{index}}"
+              data-index="{{index}}"
+              data-time="{{item.time}}"
+              bindtap="seekToLine"
+            >
+              <view class="lyric-text">{{item.text}}</view>
+              <view class="lyric-time" wx:if="{{item.time !== null}}">
+                {{item.formattedTime}}
+              </view>
+            </view>
+          </block>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <view wx:else class="empty-state">
+    <view class="empty-icon">🎵</view>
+    <view class="empty-text">暂无歌词</view>
+    <view class="empty-tip">该歌曲可能没有歌词信息</view>
+  </view>
+</view>

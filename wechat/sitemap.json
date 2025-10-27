@@ -1,0 +1,9 @@
+{
+  "desc": "Music Lyrics mini program pages sitemap",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+<view class="page share-page">
+  <view class="container">
+    <view class="header">
+      <button class="back-btn" bindtap="goBack">←</button>
+      <text class="header-title">分享的歌单</text>
+    </view>
+
+    <view wx:if="{{loading}}" class="loading">
+      <view class="spinner"></view>
+      <text>正在加载歌单...</text>
+    </view>
+
+    <view wx:elif="{{error}}" class="error">
+      <text class="error-icon">⚠️</text>
+      <text class="error-title">加载失败</text>
+      <text class="error-text">{{error}}</text>
+      <button class="retry-btn" bindtap="goBack">返回</button>
+    </view>
+
+    <view wx:elif="{{collection}}" class="collection-content">
+      <view class="collection-info">
+        <text class="collection-name">{{collection.name}}</text>
+        <text class="collection-desc" wx:if="{{collection.description}}">
+          {{collection.description}}
+        </text>
+        <view class="meta">
+          <text class="song-count">{{collection.songs.length}} 首歌曲</text>
+          <text class="share-time">分享时间：{{collection.formattedShareTime}}</text>
+        </view>
+      </view>
+
+      <view class="songs-section">
+        <text class="section-title">歌曲列表</text>
+        <view class="songs-list">
+          <block wx:for="{{collection.songs}}" wx:key="index" wx:for-index="index">
+            <view class="song-item">
+              <view class="song-info">
+                <text class="song-title">{{item.title}}</text>
+                <text class="song-artist">{{item.artist}}</text>
+              </view>
+              <button
+                class="play-btn"
+                data-index="{{index}}"
+                bindtap="playLyrics"
+              >
+                ▶
+              </button>
+            </view>
+          </block>
+        </view>
+      </view>
+
+      <view class="import-section">
+        <button
+          class="import-btn"
+          bindtap="importCollection"
+          disabled="{{importing}}"
+        >
+          <block wx:if="{{importing}}">
+            <view class="spinner-small"></view>
+            <text>导入中...</text>
+          </block>
+          <block wx:else>
+            <text>一键导入到我的合集</text>
+          </block>
+        </button>
+        <text class="import-tip">导入后，这个歌单将添加到您的合集中</text>
+        <button class="copy-link-btn" bindtap="copyShareLink">
+          复制分享链接
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{showSuccess}}" class="success-toast">
+    <view class="toast-content">
+      <text class="toast-icon">✔</text>
+      <text>{{successMessage}}</text>
+    </view>
+  </view>
+</view>

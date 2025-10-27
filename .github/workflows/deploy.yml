@@ -26,7 +26,7 @@ jobs:
     - name: Build frontend
       run: npm run build
 
-    - name: Deploy to server
+    - name: Deploy static files to server
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       uses: appleboy/scp-action@v0.1.7
       with:
@@ -39,6 +39,32 @@ jobs:
         strip_components: 1
         overwrite: true
 
+    - name: Deploy nginx config (optional)
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        port: ${{ secrets.SERVER_PORT }}
+        source: "nginx.conf"
+        target: ${{ secrets.SERVER_NGINX_CONFIG_PATH }}
+        overwrite: true
+      continue-on-error: true
+
+    - name: Deploy .htaccess for Apache (optional)
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        port: ${{ secrets.SERVER_PORT }}
+        source: ".htaccess"
+        target: ${{ secrets.SERVER_TARGET_PATH }}
+        overwrite: true
+      continue-on-error: true
+
     - name: Restart web service (optional)
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       uses: appleboy/ssh-action@v1.0.3
@@ -48,6 +74,19 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         port: ${{ secrets.SERVER_PORT }}
         script: |
-          # 可选：重启 nginx 或其他 web 服务
-          # sudo systemctl reload nginx
+          # 重新加载 nginx 配置（如果使用 nginx）
+          if command -v nginx &> /dev/null; then
+            sudo nginx -t && sudo nginx -s reload
+            echo "Nginx configuration reloaded"
+          fi
+          
+          # 重启 Apache 服务（如果使用 Apache）
+          if command -v apache2 &> /dev/null; then
+            sudo systemctl reload apache2
+            echo "Apache configuration reloaded"
+          elif command -v httpd &> /dev/null; then
+            sudo systemctl reload httpd
+            echo "Apache (httpd) configuration reloaded"
+          fi
+          
           echo "Deployment completed successfully"

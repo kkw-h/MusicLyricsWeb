@@ -1,0 +1,37 @@
+{
+  "pages": [
+    "pages/search/search",
+    "pages/lyrics/lyrics",
+    "pages/collection/collection",
+    "pages/share/share"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTitleText": "音乐歌词助手",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f5f6f8"
+  },
+  "tabBar": {
+    "color": "#666666",
+    "selectedColor": "#1976d2",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/search/search",
+        "text": "搜索"
+      },
+      {
+        "pagePath": "pages/lyrics/lyrics",
+        "text": "歌词"
+      },
+      {
+        "pagePath": "pages/collection/collection",
+        "text": "合集"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}
