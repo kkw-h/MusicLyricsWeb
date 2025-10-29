@@ -59,9 +59,6 @@ services:
 networks:
   music-lyrics-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
 
 # 可选：如果需要持久化存储，可以添加 volumes 配置
 # volumes:
